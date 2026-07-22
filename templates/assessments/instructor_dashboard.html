@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load quiz_extras %}
+{% block title %}Instructor Dashboard · Brainiac Proctored Smart Assessment Portal{% endblock %}
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 animate-fade-up">
+    <div>
+        <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-2">Instructor Portal</p>
+        <h1 class="hero-title text-slate-900">Dashboard</h1>
+        <p class="page-subtitle mt-2">Manage quizzes, monitor attempts, and review integrity reports.</p>
+    </div>
+    <a href="{% url 'assessments:quiz_create' %}" class="btn-primary shrink-0">+ Create Quiz</a>
+</div>
+
+<div class="grid gap-5 md:grid-cols-3 mb-10">
+    <div class="stat-card indigo animate-fade-up stagger-1">
+        <p class="text-sm font-semibold text-slate-500 mb-1">Total Attempts</p>
+        <p class="text-4xl font-extrabold text-brand-600">{{ stats.total_attempts|default:0 }}</p>
+    </div>
+    <div class="stat-card emerald animate-fade-up stagger-2">
+        <p class="text-sm font-semibold text-slate-500 mb-1">Average Score</p>
+        <p class="text-4xl font-extrabold text-emerald-600">{{ stats.avg_score|floatformat:1|default:"—" }}<span class="text-xl">%</span></p>
+    </div>
+    <div class="stat-card amber animate-fade-up stagger-3">
+        <p class="text-sm font-semibold text-slate-500 mb-1">Average Integrity</p>
+        <p class="text-4xl font-extrabold text-amber-600">{{ stats.avg_integrity|floatformat:1|default:"—" }}<span class="text-xl">%</span></p>
+    </div>
+</div>
+
+<h2 class="text-xl font-bold text-slate-900 mb-4">Your Quizzes</h2>
+{% if quizzes %}
+<div class="card overflow-hidden mb-10 p-0 animate-fade-up">
+    <div class="overflow-x-auto">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Questions</th>
+                    <th>Duration</th>
+                    <th>Attempts</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in quizzes %}
+                {% with theme=quiz.title|quiz_theme %}
+                <tr>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <span class="quiz-icon {{ theme.icon_bg }} !w-9 !h-9 !rounded-lg flex items-center justify-center">
+                                {% lucide theme.icon css_class="w-5 h-5 text-current" %}
+                            </span>
+                            <span class="font-semibold text-slate-800">{{ quiz.title }}</span>
+                        </div>
+                    </td>
+                    <td class="text-slate-600">{{ quiz.question_count }}</td>
+                    <td class="text-slate-600">{{ quiz.time_limit_mins }} min</td>
+                    <td><span class="badge badge-blue">{{ quiz.attempt_count }}</span></td>
+                    <td>
+                        <div class="flex gap-3">
+                            <a href="{% url 'assessments:quiz_edit' pk=quiz.pk %}" class="text-brand-600 font-semibold text-sm hover:underline">Edit</a>
+                            <a href="{% url 'assessments:audit_dashboard_quiz' quiz_pk=quiz.pk %}" class="text-amber-600 font-semibold text-sm hover:underline">Audit</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card text-center py-12 mb-10">
+    <p class="text-slate-500 mb-4">No quizzes created yet.</p>
+    <a href="{% url 'assessments:quiz_create' %}" class="btn-primary">Create Your First Quiz</a>
+</div>
+{% endif %}
+
+<h2 class="text-xl font-bold text-slate-900 mb-4">Recent Attempts</h2>
+{% if recent_attempts %}
+<div class="card overflow-hidden p-0 animate-fade-up">
+    <div class="overflow-x-auto">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Quiz</th>
+                    <th>Score</th>
+                    <th>Integrity</th>
+                    <th>Violations</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in recent_attempts %}
+                <tr>
+                    <td class="font-semibold text-slate-800">{{ att.student.username }}</td>
+                    <td class="text-slate-600">{{ att.quiz.title }}</td>
+                    <td class="font-bold text-emerald-600">{{ att.score|default:"—" }}%</td>
+                    <td>
+                        <span class="font-bold {% if att.integrity_score >= 70 %}text-emerald-600{% elif att.integrity_score >= 40 %}text-amber-600{% else %}text-red-600{% endif %}">
+                            {{ att.integrity_score }}%
+                        </span>
+                    </td>
+                    <td class="font-bold text-red-500">{{ att.violation_count }}</td>
+                    <td>
+                        <span class="badge {% if att.status == 'SUBMITTED' %}badge-green{% elif att.status == 'DISQUALIFIED' %}badge-red{% else %}badge-blue{% endif %}">
+                            {{ att.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<p class="text-slate-500">No attempts recorded yet.</p>
+{% endif %}
+{% endblock %}

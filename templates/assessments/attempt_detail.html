@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load quiz_extras %}
+{% block title %}Attempt Results{% endblock %}
+{% block content %}
+{% with theme=attempt.quiz.title|quiz_theme %}
+<div class="max-w-3xl mx-auto animate-fade-up">
+    <div class="flex items-center gap-4 mb-8">
+        <div class="quiz-icon {{ theme.icon_bg }} flex items-center justify-center">
+            {% lucide theme.icon css_class=theme.icon_class %}
+        </div>
+        <div>
+            <span class="badge badge-blue">{{ theme.tag }}</span>
+            <h1 class="text-2xl font-bold text-slate-900 mt-1">{{ attempt.quiz.title }}</h1>
+            <p class="text-slate-500 text-sm">Attempt by {{ attempt.student.username }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+        <div class="card text-center !p-5">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Score</p>
+            <div class="score-ring border-emerald-400 text-emerald-600 mx-auto">{{ attempt.score|default:"—" }}%</div>
+        </div>
+        <div class="card text-center !p-5">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Integrity</p>
+            <div class="score-ring mx-auto {% if attempt.integrity_score >= 70 %}border-emerald-400 text-emerald-600{% elif attempt.integrity_score >= 40 %}border-amber-400 text-amber-600{% else %}border-red-400 text-red-600{% endif %}">
+                {{ attempt.integrity_score }}%
+            </div>
+        </div>
+        <div class="card text-center !p-5">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Violations</p>
+            <div class="score-ring border-red-400 text-red-600 mx-auto">{{ violations|length }}</div>
+        </div>
+        <div class="card text-center !p-5">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Status</p>
+            <div class="mt-3">
+                <span class="badge {% if attempt.status == 'SUBMITTED' %}badge-green{% elif attempt.status == 'DISQUALIFIED' %}badge-red{% else %}badge-blue{% endif %} text-sm !py-1.5 !px-3">
+                    {{ attempt.status }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    {% if violations %}
+    <h2 class="text-lg font-bold text-slate-900 mb-4">Violation Log</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+        {% for v in violations %}
+        <div class="rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+            {% if v.snapshot_base64 %}
+            <img src="data:image/jpeg;base64,{{ v.snapshot_base64 }}" class="w-full h-28 object-cover" alt="Snapshot">
+            {% endif %}
+            <div class="p-3">
+                <p class="font-bold text-red-600 text-xs">{{ v.event_type }}</p>
+                <p class="text-slate-400 text-[10px] mt-0.5">{{ v.timestamp|date:"M d, H:i:s" }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if answers %}
+    <h2 class="text-lg font-bold text-slate-900 mb-4">Your Answers</h2>
+    <div class="space-y-3 mb-8">
+        {% for ans in answers %}
+        <div class="card !p-4 text-sm">
+            <p class="font-semibold text-slate-800 mb-2">{{ ans.question.text }}</p>
+            <p class="text-slate-600">
+                {% if ans.selected_option %}
+                    Selected: <span class="font-bold">{{ ans.selected_option }}</span>
+                    {% if ans.selected_option == ans.question.correct_option %}
+                    <span class="inline-flex items-center gap-1 text-emerald-600 font-bold ml-2">{% lucide "check" css_class="w-4 h-4" %} Correct</span>
+                    {% else %}
+                    <span class="inline-flex items-center gap-1 text-red-600 font-bold ml-2">{% lucide "x" css_class="w-4 h-4" %} Incorrect (answer: {{ ans.question.correct_option }})</span>
+                    {% endif %}
+                {% else %}
+                    Answer: <span class="font-medium">{{ ans.text_answer|default:"—" }}</span>
+                {% endif %}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <a href="{% url 'assessments:dashboard' %}" class="btn-secondary">← Back to Dashboard</a>
+</div>
+{% endwith %}
+{% endblock %}

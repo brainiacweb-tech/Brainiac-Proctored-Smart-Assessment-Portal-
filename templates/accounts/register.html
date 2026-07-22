@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Register · Brainiac Proctored Smart Assessment Portal{% endblock %}
+{% block main_class %}p-0 max-w-none{% endblock %}
+{% block extra_head %}
+<script src="/static/js/password-toggle.js" defer></script>
+{% endblock %}
+{% block content %}
+<div class="auth-panel animate-fade-up">
+    <div class="auth-hero hidden lg:flex">
+        <div class="relative z-10 max-w-lg">
+            <p class="text-indigo-200 text-sm font-semibold uppercase tracking-widest mb-4">Join the Portal</p>
+            <h1 class="text-4xl xl:text-5xl font-extrabold leading-tight mb-6">Start your proctored learning journey.</h1>
+            <p class="text-indigo-100 text-lg leading-relaxed">
+                Register as a student to take exams, or as an instructor to create and monitor assessments.
+            </p>
+        </div>
+    </div>
+
+    <div class="auth-form-wrap">
+        <div class="w-full max-w-md">
+            <div class="card">
+                <h1 class="text-2xl font-bold text-slate-900 mb-1">Create account</h1>
+                <p class="text-slate-500 text-sm mb-6">Fill in your details to get started</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ field.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn-primary w-full mt-2">Create Account</button>
+                </form>
+
+                <p class="mt-5 text-center text-sm text-slate-500">
+                    Already have an account? <a href="{% url 'accounts:login' %}" class="text-brand-600 font-semibold hover:underline">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

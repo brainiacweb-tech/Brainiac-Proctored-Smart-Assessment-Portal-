@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load quiz_extras %}
+{% block title %}Audit Dashboard{% endblock %}
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 animate-fade-up">
+    <div>
+        <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-2">Integrity Review</p>
+        <h1 class="hero-title text-slate-900">Audit Dashboard</h1>
+        <p class="page-subtitle mt-2">Review student scores, violation logs, and snapshot evidence.</p>
+    </div>
+    <div class="flex gap-2 shrink-0">
+        <a href="{% url 'assessments:audit_dashboard' %}" class="btn-secondary text-sm">All Quizzes</a>
+        <a href="{% url 'assessments:instructor_dashboard' %}" class="btn-secondary text-sm">Dashboard</a>
+    </div>
+</div>
+
+{% if quizzes %}
+<div class="mb-8 animate-fade-up">
+    <label class="block text-sm font-semibold text-slate-700 mb-2">Filter by quiz</label>
+    <select onchange="window.location.href=this.value" class="form-select max-w-md">
+        <option value="{% url 'assessments:audit_dashboard' %}">All Quizzes</option>
+        {% for q in quizzes %}
+        <option value="{% url 'assessments:audit_dashboard_quiz' quiz_pk=q.pk %}" {% if quiz and quiz.pk == q.pk %}selected{% endif %}>
+            {{ q.title }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+{% endif %}
+
+{% if quiz %}
+<div class="inline-flex items-center gap-2 bg-brand-50 text-brand-700 px-4 py-2 rounded-full text-sm font-semibold mb-6">
+    Filtering: {{ quiz.title }}
+</div>
+{% endif %}
+
+{% if attempts %}
+<div class="space-y-6">
+    {% for att in attempts %}
+    <div class="card animate-fade-up">
+        <div class="flex flex-wrap items-start justify-between gap-4 mb-5 pb-5 border-b border-slate-100">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">{{ att.student.username }}</h3>
+                <p class="text-sm text-slate-500">{{ att.quiz.title }} · {{ att.start_time|date:"M d, Y H:i" }}</p>
+            </div>
+            <div class="flex flex-wrap gap-4 text-sm">
+                <div class="text-center">
+                    <p class="text-xs text-slate-400 font-semibold uppercase">Score</p>
+                    <p class="text-xl font-extrabold text-emerald-600">{{ att.score|default:"—" }}%</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-slate-400 font-semibold uppercase">Integrity</p>
+                    <p class="text-xl font-extrabold {% if att.integrity_score >= 70 %}text-emerald-600{% elif att.integrity_score >= 40 %}text-amber-600{% else %}text-red-600{% endif %}">
+                        {{ att.integrity_score }}%
+                    </p>
+                </div>
+                <div class="text-center">
+                    <p class="text-xs text-slate-400 font-semibold uppercase">Violations</p>
+                    <p class="text-xl font-extrabold text-red-500">{{ att.violation_count }}</p>
+                </div>
+                <div class="flex items-center">
+                    <span class="badge {% if att.status == 'SUBMITTED' %}badge-green{% elif att.status == 'DISQUALIFIED' %}badge-red{% else %}badge-blue{% endif %}">
+                        {{ att.status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {% if att.violations.all %}
+        <h4 class="text-sm font-bold text-slate-700 mb-3">Violation Snapshots</h4>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {% for v in att.violations.all %}
+            <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 hover:shadow-md transition-shadow">
+                {% if v.snapshot_base64 %}
+                <img src="data:image/jpeg;base64,{{ v.snapshot_base64 }}" alt="Violation snapshot" class="w-full h-24 object-cover">
+                {% else %}
+                <div class="w-full h-24 bg-slate-200 flex items-center justify-center text-xs text-slate-500">No snapshot</div>
+                {% endif %}
+                <div class="p-2.5">
+                    <p class="font-bold text-red-600 text-xs">{{ v.event_type }}</p>
+                    <p class="text-slate-400 text-[10px] mt-0.5">{{ v.timestamp|date:"H:i:s" }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-4 py-3 rounded-xl">
+            {% lucide "check-circle" css_class="w-4 h-4" %} No violations recorded — clean attempt
+        </div>
+        {% endif %}
+
+        <a href="{% url 'assessments:attempt_detail' attempt_pk=att.pk %}" class="inline-flex items-center gap-1 mt-4 text-sm font-semibold text-brand-600 hover:underline">
+            View full details →
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card text-center py-16 animate-fade-up">
+    <p class="text-5xl mb-4 flex justify-center text-slate-300">{% lucide "search" css_class="w-14 h-14" %}</p>
+    <h2 class="text-xl font-bold text-slate-800 mb-2">No attempts to audit</h2>
+    <p class="text-slate-500">Student quiz attempts will appear here with violation evidence.</p>
+</div>
+{% endif %}
+{% endblock %}

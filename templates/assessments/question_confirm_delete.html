@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Delete Question{% endblock %}
+{% block content %}
+<div class="card max-w-md mx-auto mt-12 text-center">
+    <h1 class="text-xl font-bold mb-4">Delete this question?</h1>
+    <p class="text-gray-600 mb-2">{{ question.text|truncatewords:15 }}</p>
+    <form method="post" class="flex gap-3 justify-center mt-6">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">Delete</button>
+        <a href="{% url 'assessments:quiz_edit' pk=question.quiz.pk %}" class="btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

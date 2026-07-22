@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Add Question{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-2">{% if is_edit %}Edit Question{% else %}Add Question{% endif %}</h1>
+<p class="text-gray-600 mb-6">Quiz: {{ quiz.title }}</p>
+
+<form method="post" class="card max-w-2xl">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p class="text-red-600 text-sm">{{ field.errors.0 }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    <div class="flex gap-3">
+        <button type="submit" class="btn-primary">Save</button>
+        <a href="{% url 'assessments:quiz_edit' pk=quiz.pk %}" class="btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

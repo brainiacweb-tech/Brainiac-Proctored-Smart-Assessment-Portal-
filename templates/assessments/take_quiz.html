@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load quiz_extras %}
+{% block title %}{{ quiz.title }} - Exam{% endblock %}
+{% block hide_nav %}true{% endblock %}
+{% block main_class %}p-0 max-w-none{% endblock %}
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+{% block content %}
+<div class="flex flex-col h-screen bg-slate-100">
+    <header class="exam-header px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+        <div>
+            <h1 class="font-bold text-lg">{{ quiz.title }}</h1>
+            <p class="text-indigo-200 text-xs font-medium">Proctored Exam · Attempt #{{ attempt.pk }}</p>
+        </div>
+        <div class="flex items-center gap-6 sm:gap-8">
+            <div class="text-center">
+                <p class="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">Time Left</p>
+                <p id="timer" class="text-2xl sm:text-3xl font-mono font-extrabold">--:--</p>
+            </div>
+            <div class="text-center">
+                <p class="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">Warnings</p>
+                <p id="warning-display" class="text-2xl sm:text-3xl font-extrabold">
+                    <span id="warning-count">0</span><span class="text-indigo-300 text-lg">/{{ quiz.max_allowed_warnings }}</span>
+                </p>
+            </div>
+            <div class="text-center">
+                <p class="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">Integrity</p>
+                <p id="integrity-display" class="text-2xl sm:text-3xl font-extrabold text-emerald-300">100%</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden flex-col lg:flex-row">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+            <form id="quiz-form" class="max-w-3xl mx-auto">
+                {% for item in question_items %}
+                {% with q=item.question ans=item.answer %}
+                <div class="card mb-5 !p-5 sm:!p-6">
+                    <p class="font-bold text-slate-900 mb-4 text-base leading-relaxed">
+                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-brand-100 text-brand-700 text-sm font-extrabold mr-2">{{ forloop.counter }}</span>
+                        {{ q.text }}
+                    </p>
+                    {% if q.question_type == 'MC' %}
+                    <div class="space-y-2.5">
+                        {% if q.option_a %}
+                        <label class="option-card flex items-center gap-3">
+                            <input type="radio" name="q_{{ q.id }}" value="A" {% if ans.selected_option == 'A' %}checked{% endif %} class="text-brand-600">
+                            <span class="text-sm font-medium text-slate-700"><span class="font-bold text-brand-600">A.</span> {{ q.option_a }}</span>
+                        </label>
+                        {% endif %}
+                        {% if q.option_b %}
+                        <label class="option-card flex items-center gap-3">
+                            <input type="radio" name="q_{{ q.id }}" value="B" {% if ans.selected_option == 'B' %}checked{% endif %} class="text-brand-600">
+                            <span class="text-sm font-medium text-slate-700"><span class="font-bold text-brand-600">B.</span> {{ q.option_b }}</span>
+                        </label>
+                        {% endif %}
+                        {% if q.option_c %}
+                        <label class="option-card flex items-center gap-3">
+                            <input type="radio" name="q_{{ q.id }}" value="C" {% if ans.selected_option == 'C' %}checked{% endif %} class="text-brand-600">
+                            <span class="text-sm font-medium text-slate-700"><span class="font-bold text-brand-600">C.</span> {{ q.option_c }}</span>
+                        </label>
+                        {% endif %}
+                        {% if q.option_d %}
+                        <label class="option-card flex items-center gap-3">
+                            <input type="radio" name="q_{{ q.id }}" value="D" {% if ans.selected_option == 'D' %}checked{% endif %} class="text-brand-600">
+                            <span class="text-sm font-medium text-slate-700"><span class="font-bold text-brand-600">D.</span> {{ q.option_d }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <textarea name="q_{{ q.id }}" rows="3" class="form-input" placeholder="Type your answer here...">{% if ans %}{{ ans.text_answer }}{% endif %}</textarea>
+                    {% endif %}
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </form>
+            <button id="submit-btn" class="btn-primary w-full max-w-3xl mx-auto block mb-8 !py-3.5 text-base">Submit Quiz</button>
+        </div>
+
+        <aside class="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-slate-200 shadow-inner p-4 flex flex-col shrink-0">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Live Proctor Feed</h3>
+            <div class="relative">
+                <video id="webcam" autoplay muted playsinline class="w-full rounded-xl bg-black border-2 border-slate-200 shadow-sm"></video>
+                <canvas id="capture-canvas" class="hidden"></canvas>
+                <img id="processed-preview" class="w-full rounded-xl mt-2 hidden border border-slate-200" alt="CV processed frame">
+            </div>
+            <div id="proctor-status" class="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-1">Face Detection</p>
+                <p class="text-sm font-bold"><span id="face-status" class="text-emerald-600">Initializing...</span></p>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div id="violation-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl animate-fade-up">
+        <div class="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mb-4">
+            {% lucide "alert-triangle" css_class="w-7 h-7" %}
+        </div>
+        <h2 class="text-xl font-extrabold text-red-600 mb-2">Violation Detected!</h2>
+        <p id="violation-message" class="text-slate-600 mb-6 leading-relaxed"></p>
+        <button id="violation-dismiss" class="btn-primary w-full">Acknowledge & Continue</button>
+    </div>
+</div>
+
+<script>
+    window.PROCTOR_CONFIG = {{ proctor_config_json|safe }};
+</script>
+<script src="/static/js/proctor.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const config = window.PROCTOR_CONFIG;
+    const proctor = new ProctorController(config);
+
+    proctor.onViolation = (msg, count, max) => {
+        document.getElementById('violation-message').textContent =
+            `${msg} Warning ${count} of ${max}.`;
+        document.getElementById('warning-count').textContent = count;
+        const modal = document.getElementById('violation-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    };
+
+    proctor.onIntegrityUpdate = (score) => {
+        const el = document.getElementById('integrity-display');
+        el.textContent = `${score}%`;
+        el.className = 'text-2xl sm:text-3xl font-extrabold ' + (
+            score >= 70 ? 'text-emerald-300' : score >= 40 ? 'text-amber-300' : 'text-red-300'
+        );
+    };
+
+    proctor.onFaceStatus = (status) => {
+        const el = document.getElementById('face-status');
+        el.textContent = status;
+        el.className = status === 'OK' ? 'text-emerald-600' :
+            status.includes('FLAG') ? 'text-red-600' : 'text-amber-600';
+    };
+
+    proctor.onProcessedFrame = (b64) => {
+        const img = document.getElementById('processed-preview');
+        img.src = 'data:image/jpeg;base64,' + b64;
+        img.classList.remove('hidden');
+    };
+
+    proctor.onDisqualified = () => {
+        alert('Maximum warnings exceeded. Your quiz has been auto-submitted.');
+        window.location.href = `/assessments/attempt/${config.attemptId}/`;
+    };
+
+    proctor.onTimeUp = () => proctor.submitQuiz();
+
+    document.getElementById('violation-dismiss').addEventListener('click', () => {
+        const modal = document.getElementById('violation-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    });
+
+    document.getElementById('submit-btn').addEventListener('click', () => {
+        if (confirm('Submit your quiz? This cannot be undone.')) {
+            proctor.submitQuiz();
+        }
+    });
+
+    proctor.init();
+});
+</script>
+{% endblock %}

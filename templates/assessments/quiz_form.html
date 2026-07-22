@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Create Quiz{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">{% if is_edit %}Edit Quiz{% else %}Create Quiz{% endif %}</h1>
+
+<form method="post" class="card max-w-2xl">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p class="text-red-600 text-sm">{{ field.errors.0 }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn-primary">Save Quiz</button>
+</form>
+
+{% if is_edit and quiz %}
+<h2 class="text-xl font-semibold mt-8 mb-4">Questions ({{ questions|length }})</h2>
+<a href="{% url 'assessments:question_add' quiz_pk=quiz.pk %}" class="btn-primary text-sm mb-4 inline-block">Add Question</a>
+
+{% if questions %}
+<div class="space-y-3">
+    {% for q in questions %}
+    <div class="card flex items-start justify-between">
+        <div>
+            <span class="text-xs text-gray-500">Q{{ q.order|add:1 }} &middot; {{ q.get_question_type_display }}</span>
+            <p class="font-medium mt-1">{{ q.text }}</p>
+            {% if q.question_type == 'MC' %}
+            <p class="text-sm text-gray-600 mt-1">Correct: {{ q.correct_option }}</p>
+            {% endif %}
+        </div>
+        <div class="flex gap-2 shrink-0">
+            <a href="{% url 'assessments:question_edit' pk=q.pk %}" class="text-indigo-600 text-sm hover:underline">Edit</a>
+            <a href="{% url 'assessments:question_delete' pk=q.pk %}" class="text-red-600 text-sm hover:underline">Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-gray-600">No questions yet. Add at least one before students can take this quiz.</p>
+{% endif %}
+{% endif %}
+{% endblock %}

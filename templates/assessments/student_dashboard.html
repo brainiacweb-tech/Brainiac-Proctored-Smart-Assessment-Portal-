@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load quiz_extras %}
+{% block title %}My Quizzes · Brainiac Proctored Smart Assessment Portal{% endblock %}
+{% block content %}
+<div class="mb-10 animate-fade-up">
+    <p class="text-brand-600 text-sm font-bold uppercase tracking-widest mb-2">Student Portal</p>
+    <h1 class="hero-title text-slate-900 mb-3">Available Quizzes</h1>
+    <p class="page-subtitle">Select a proctored assessment below. Your webcam will be monitored throughout the exam.</p>
+</div>
+
+{% if quiz_items %}
+<div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+    {% for item in quiz_items %}
+    {% with theme=item.quiz.title|quiz_theme %}
+    <div class="quiz-card animate-fade-up stagger-{{ forloop.counter }}">
+        <div class="quiz-card-accent bg-gradient-to-r {{ theme.accent }}"></div>
+        <div class="p-6">
+            <div class="flex items-start gap-4 mb-4">
+                <div class="quiz-icon {{ theme.icon_bg }}">
+                    {% lucide theme.icon css_class=theme.icon_class %}
+                </div>
+                <div class="min-w-0 flex-1">
+                    <span class="badge badge-blue mb-2">{{ theme.tag }}</span>
+                    <h2 class="text-lg font-bold text-slate-900 leading-snug">{{ item.quiz.title }}</h2>
+                </div>
+            </div>
+            <p class="text-slate-500 text-sm leading-relaxed mb-5">{{ item.quiz.description|truncatewords:22 }}</p>
+
+            <div class="flex flex-wrap gap-2 mb-5">
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    {% lucide "clock" css_class="w-3.5 h-3.5" %} {{ item.quiz.time_limit_mins }} min
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    {% lucide "list-checks" css_class="w-3.5 h-3.5" %} {{ item.quiz.question_count }} questions
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    {% lucide "alert-triangle" css_class="w-3.5 h-3.5" %} {{ item.quiz.max_allowed_warnings }} warnings max
+                </span>
+            </div>
+
+            <a href="{% url 'assessments:start_quiz' pk=item.quiz.pk %}" class="btn-primary w-full">
+                Start Exam {% lucide "arrow-right" css_class="w-4 h-4" %}
+            </a>
+        </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="card text-center py-16 animate-fade-up">
+    <div class="flex justify-center mb-4 text-slate-300">{% lucide "inbox" css_class="w-14 h-14" %}</div>
+    <h2 class="text-xl font-bold text-slate-800 mb-2">No quizzes available</h2>
+    <p class="text-slate-500">Check back later or contact your instructor.</p>
+</div>
+{% endif %}
+{% endblock %}

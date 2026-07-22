@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Brainiac Proctored Smart Assessment Portal{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#eef2ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#312e81' },
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="mesh-bg min-h-screen flex flex-col">
+    {% if not hide_nav %}
+    <header class="site-header sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex items-center justify-between gap-4 py-3.5">
+                <a href="{% url 'assessments:dashboard' %}" class="brand-link flex items-center gap-2.5 sm:gap-3 group min-w-0">
+                    <img src="/static/images/brainiac-logo-icon.png"
+                         srcset="/static/images/brainiac-logo-icon.png 1x, /static/images/brainiac-logo-icon@2x.png 2x"
+                         alt="Brainiac"
+                         class="brand-logo brand-logo-header shrink-0"
+                         width="171" height="52">
+                    <div class="brand-text min-w-0">
+                        <span class="site-brand-title block">Brainiac</span>
+                        <span class="site-brand-subtitle block">Proctored Smart Assessment Portal</span>
+                    </div>
+                </a>
+                <nav class="flex items-center gap-1 sm:gap-2 shrink-0">
+                    {% if user.is_authenticated %}
+                        <span class="hidden md:inline text-xs font-medium text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-full">
+                            {{ user.username }} · {{ user.role }}
+                        </span>
+                        {% if user.is_instructor %}
+                            <a href="{% url 'assessments:instructor_dashboard' %}" class="nav-link">Dashboard</a>
+                            <a href="{% url 'assessments:audit_dashboard' %}" class="nav-link">Audit</a>
+                        {% else %}
+                            <a href="{% url 'assessments:student_dashboard' %}" class="nav-link">My Quizzes</a>
+                        {% endif %}
+                        <a href="{% url 'accounts:logout' %}" class="nav-link nav-link-muted">Logout</a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="nav-link">Login</a>
+                        <a href="{% url 'accounts:register' %}" class="btn-primary text-sm !py-2 !px-4">Get Started</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 mt-4 w-full">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %} mb-2 animate-fade-up">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="flex-1 w-full {% block main_class %}max-w-7xl mx-auto px-4 sm:px-6 py-8{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if not hide_nav %}
+    <footer class="site-footer mt-auto">
+        <div class="site-footer-glow"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 relative">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <img src="/static/images/brainiac-logo.png" alt="Brainiac" class="brand-logo brand-logo-footer shrink-0">
+                    <div>
+                        <p class="text-white font-bold text-lg leading-tight">Brainiac</p>
+                        <p class="text-indigo-200 text-sm font-medium">Smart Assessment Portal</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <span class="footer-pill">AI Integrity Monitoring</span>
+                    <span class="footer-pill">Real-time Proctoring</span>
+                    <span class="footer-pill">Secure Exams</span>
+                </div>
+            </div>
+            <div class="site-footer-divider"></div>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm">
+                <p class="text-indigo-200/90">&copy; {% now "Y" %} Brainiac Proctored Smart Assessment Portal</p>
+                <p class="text-indigo-100 font-semibold">
+                    Developed by <span class="text-white">Francis Kusi</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+    {% endif %}
+    <script>document.addEventListener('DOMContentLoaded', () => { if (window.lucide) lucide.createIcons(); });</script>
+</body>
+</html>
