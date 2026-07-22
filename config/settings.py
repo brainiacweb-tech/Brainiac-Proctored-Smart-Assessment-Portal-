@@ -19,7 +19,7 @@ if _extra_hosts := os.environ.get('ALLOWED_HOSTS', ''):
     ALLOWED_HOSTS.extend(h.strip() for h in _extra_hosts.split(',') if h.strip())
 if _railway_domain := os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
     ALLOWED_HOSTS.append(_railway_domain)
-if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
+if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PUBLIC_DOMAIN') or os.environ.get('RAILWAY_SERVICE_ID'):
     ALLOWED_HOSTS.extend([
         'healthcheck.railway.app',
         '.up.railway.app',
