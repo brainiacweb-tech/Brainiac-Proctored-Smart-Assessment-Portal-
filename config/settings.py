@@ -13,12 +13,25 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
 if _extra_hosts := os.environ.get('ALLOWED_HOSTS', ''):
     ALLOWED_HOSTS.extend(h.strip() for h in _extra_hosts.split(',') if h.strip())
 if _railway_domain := os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
     ALLOWED_HOSTS.append(_railway_domain)
+if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
+    ALLOWED_HOSTS.extend([
+        'healthcheck.railway.app',
+        '.up.railway.app',
+        '.railway.app',
+    ])
 
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.append('http://10.205.144.148:8000')
 if _railway_domain := os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
     CSRF_TRUSTED_ORIGINS.append(f'https://{_railway_domain}')
 if _extra_origins := os.environ.get('CSRF_TRUSTED_ORIGINS', ''):
