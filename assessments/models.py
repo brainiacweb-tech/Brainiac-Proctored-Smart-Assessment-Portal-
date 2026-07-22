@@ -139,6 +139,8 @@ class ViolationLog(models.Model):
         NO_FACE = 'NO_FACE', 'No Face Detected'
         MULTIPLE_FACES = 'MULTIPLE_FACES', 'Multiple Faces Detected'
         HEAD_TURNED = 'HEAD_TURNED', 'Head Turned Away'
+        NOISE_DETECTED = 'NOISE_DETECTED', 'Excessive Noise Detected'
+        MULTIPLE_DISPLAY = 'MULTIPLE_DISPLAY', 'Multiple Displays Detected'
 
     attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='violations')
     event_type = models.CharField(max_length=20, choices=EventType.choices)

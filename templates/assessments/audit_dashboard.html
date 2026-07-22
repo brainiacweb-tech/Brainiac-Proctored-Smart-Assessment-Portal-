@@ -77,7 +77,10 @@
                 <div class="w-full h-24 bg-slate-200 flex items-center justify-center text-xs text-slate-500">No snapshot</div>
                 {% endif %}
                 <div class="p-2.5">
-                    <p class="font-bold text-red-600 text-xs">{{ v.event_type }}</p>
+                    <p class="font-bold text-red-600 text-xs">{{ v.get_event_type_display }}</p>
+                    {% if v.details %}
+                    <p class="text-slate-500 text-[10px] mt-0.5 line-clamp-2">{{ v.details }}</p>
+                    {% endif %}
                     <p class="text-slate-400 text-[10px] mt-0.5">{{ v.timestamp|date:"H:i:s" }}</p>
                 </div>
             </div>

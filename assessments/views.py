@@ -275,6 +275,12 @@ def take_quiz(request, attempt_pk):
         'debounceChecks': getattr(settings, 'PROCTOR_FACE_DEBOUNCE_CHECKS', 2),
         'maxWarnings': quiz.max_allowed_warnings,
         'timeLimitMins': quiz.time_limit_mins,
+        'noiseThreshold': getattr(settings, 'PROCTOR_NOISE_THRESHOLD', 0.38),
+        'noiseDebounceChecks': getattr(settings, 'PROCTOR_NOISE_DEBOUNCE_CHECKS', 3),
+        'noiseSampleMs': getattr(settings, 'PROCTOR_NOISE_SAMPLE_MS', 500),
+        'displayCheckMs': getattr(settings, 'PROCTOR_DISPLAY_CHECK_MS', 3000),
+        'displayDebounceChecks': getattr(settings, 'PROCTOR_DISPLAY_DEBOUNCE_CHECKS', 2),
+        'violationCooldownMs': getattr(settings, 'PROCTOR_VIOLATION_COOLDOWN_MS', 15000),
     }
 
     return render(request, 'assessments/take_quiz.html', {

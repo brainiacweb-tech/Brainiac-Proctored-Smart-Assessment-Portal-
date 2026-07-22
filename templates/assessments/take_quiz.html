@@ -85,9 +85,19 @@
                 <canvas id="capture-canvas" class="hidden"></canvas>
                 <img id="processed-preview" class="w-full rounded-xl mt-2 hidden border border-slate-200" alt="CV processed frame">
             </div>
-            <div id="proctor-status" class="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-1">Face Detection</p>
-                <p class="text-sm font-bold"><span id="face-status" class="text-emerald-600">Initializing...</span></p>
+            <div id="proctor-status" class="mt-4 space-y-2">
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-1">Face Detection</p>
+                    <p class="text-sm font-bold"><span id="face-status" class="text-emerald-600">Initializing...</span></p>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-1">Audio Monitor</p>
+                    <p class="text-sm font-bold"><span id="noise-status" class="text-emerald-600">Initializing...</span></p>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-1">Display Setup</p>
+                    <p class="text-sm font-bold"><span id="display-status" class="text-emerald-600">Checking...</span></p>
+                </div>
             </div>
         </aside>
     </div>
@@ -135,6 +145,20 @@ document.addEventListener('DOMContentLoaded', () => {
         el.textContent = status;
         el.className = status === 'OK' ? 'text-emerald-600' :
             status.includes('FLAG') ? 'text-red-600' : 'text-amber-600';
+    };
+
+    proctor.onNoiseStatus = (status) => {
+        const el = document.getElementById('noise-status');
+        el.textContent = status;
+        el.className = status === 'Quiet' ? 'text-emerald-600' :
+            status.includes('High') ? 'text-red-600' : 'text-amber-600';
+    };
+
+    proctor.onDisplayStatus = (status) => {
+        const el = document.getElementById('display-status');
+        el.textContent = status;
+        el.className = status === 'Single display' ? 'text-emerald-600' :
+            status.includes('detected') ? 'text-red-600' : 'text-amber-600';
     };
 
     proctor.onProcessedFrame = (b64) => {
